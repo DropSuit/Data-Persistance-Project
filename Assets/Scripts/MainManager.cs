@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.SceneManagement;
 using UnityEngine.UI;
+using UnityEditor;
 
 public class MainManager : MonoBehaviour
 {
@@ -12,6 +13,7 @@ public class MainManager : MonoBehaviour
 
     public Text ScoreText;
     public GameObject GameOverText;
+    public Text highscoreText;
     
     private bool m_Started = false;
     private int m_Points;
@@ -36,6 +38,8 @@ public class MainManager : MonoBehaviour
                 brick.onDestroyed.AddListener(AddPoint);
             }
         }
+        highscoreText.text = "High score: " + SaveManager.Instance.HighScoreName + ": " + SaveManager.Instance.HighScore;
+        ScoreText.text = SaveManager.Instance.PlayerName + $" Score: {m_Points}";
     }
 
     private void Update()
@@ -60,17 +64,36 @@ public class MainManager : MonoBehaviour
                 SceneManager.LoadScene(SceneManager.GetActiveScene().buildIndex);
             }
         }
+
     }
 
     void AddPoint(int point)
     {
         m_Points += point;
-        ScoreText.text = $"Score : {m_Points}";
+        ScoreText.text = SaveManager.Instance.PlayerName + $" Score: {m_Points}";
     }
 
     public void GameOver()
     {
+        if (m_Points > SaveManager.Instance.HighScore)
+        {
+            SaveManager.Instance.HighScore = m_Points;
+            SaveManager.Instance.HighScoreName = SaveManager.Instance.PlayerName;
+        }
         m_GameOver = true;
         GameOverText.SetActive(true);
+    }
+
+    public void Exit()
+    {
+#if UNITY_EDITOR
+        EditorApplication.ExitPlaymode(); //close the game while being played in the editor
+
+#else
+        Application.Quit(); // close the game while being ran as an application
+
+#endif
+
+        SaveManager.Instance.SaveScore();
     }
 }
